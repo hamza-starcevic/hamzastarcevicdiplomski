@@ -308,16 +308,9 @@ const AppTemplate = () => {
                 <AppBar position="relative" elevation={0}>
                     <Toolbar>
                         <Typography color='#00B36B' variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                            Image Resizer
+                            Image Resizer - "Proof of concept" za diplomski rad Hamza Starcevic
                         </Typography>
-                        <IconButton
-                            size="large"
-                            edge="end"
-                            color="inherit"
-                            aria-label="menu"
-                        >
-                            <MenuIcon />
-                        </IconButton>
+
                     </Toolbar>
                 </AppBar>
 
@@ -442,21 +435,6 @@ const AppTemplate = () => {
 
                     {renderDownloadSection()}
                 </Container>
-
-                <Snackbar
-                    open={submitStatus.open}
-                    autoHideDuration={6000}
-                    onClose={handleSnackbarClose}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                >
-                    <Alert
-                        onClose={handleSnackbarClose}
-                        severity={submitStatus.severity}
-                        sx={{ width: '100%' }}
-                    >
-                        {submitStatus.message}
-                    </Alert>
-                </Snackbar>
             </Box>
         </ThemeProvider>
     );
