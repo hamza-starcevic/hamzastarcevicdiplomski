@@ -21,9 +21,69 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DownloadIcon from '@mui/icons-material/Download';
 
-const darkTheme = createTheme({
-    // ... your theme configuration
+const mentholTheme = createTheme({
+    palette: {
+        mode: 'dark',
+        primary: {
+            main: '#00FF9F', // Bright menthol
+            light: '#66FFB2', // Lighter menthol
+            dark: '#00B36B', // Darker menthol
+            contrastText: '#000000',
+        },
+        secondary: {
+            main: '#1A1A1A', // Dark gray
+            light: '#333333',
+            dark: '#000000',
+        },
+        background: {
+            default: '#0A0A0A', // Near black
+            paper: '#141414', // Slightly lighter black
+        },
+        text: {
+            primary: '#FFFFFF',
+            secondary: '#B3B3B3',
+        },
+        success: {
+            main: '#00FF9F',
+        },
+        error: {
+            main: '#FF4444',
+        },
+    },
+    components: {
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 8,
+                    textTransform: 'none',
+                },
+                contained: {
+                    boxShadow: 'none',
+                    '&:hover': {
+                        boxShadow: '0 2px 8px rgba(0, 255, 159, 0.2)',
+                    },
+                },
+            },
+        },
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    backgroundImage: 'none',
+                },
+            },
+        },
+        MuiAppBar: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#0A0A0A',
+                    borderBottom: '1px solid rgba(0, 255, 159, 0.1)',
+                },
+            },
+        },
+    },
 });
+
+const darkTheme = mentholTheme
 
 const API_URL = 'https://bu30c8d121.execute-api.eu-central-1.amazonaws.com/resize/resize';
 
@@ -247,7 +307,7 @@ const AppTemplate = () => {
             }}>
                 <AppBar position="relative" elevation={0}>
                     <Toolbar>
-                        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                        <Typography color='#00B36B' variant="h6" component="div" sx={{ flexGrow: 1 }}>
                             Image Resizer
                         </Typography>
                         <IconButton
