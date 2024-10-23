@@ -19,9 +19,10 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import DownloadIcon from '@mui/icons-material/Download';
 
 const darkTheme = createTheme({
-    // ... [previous theme configuration remains the same]
+    // ... your theme configuration
 });
 
 const API_URL = 'https://bu30c8d121.execute-api.eu-central-1.amazonaws.com/resize/resize';
@@ -39,7 +40,57 @@ const AppTemplate = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [submitStatus, setSubmitStatus] = useState({ open: false, message: '', severity: 'success' });
-    const [apiResponse, setApiResponse] = useState(null);
+    const [downloadUrl, setDownloadUrl] = useState(null);
+
+    // Handle download
+    const handleDownload = async (url) => {
+        try {
+            // Fetch the image with specific headers for S3
+            const response = await axios.get(url, {
+                responseType: 'arraybuffer',  // Changed from blob to arraybuffer
+                headers: {
+                    'Content-Type': 'application/octet-stream',
+                },
+                // Ensure cookies and credentials are not sent
+                withCredentials: false
+            });
+
+            // Create blob from array buffer
+            const blob = new Blob([response.data], { type: 'image/jpeg' });
+            const downloadUrl = window.URL.createObjectURL(blob);
+
+            // Extract filename from URL (before the query parameters)
+            const fileName = url.split('/').pop().split('?')[0] || 'resized-image.jpg';
+
+            // Create and trigger download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+
+            // Cleanup
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(downloadUrl);
+
+            // Show success message
+            setSubmitStatus({
+                open: true,
+                message: 'Download started successfully!',
+                severity: 'success'
+            });
+
+        } catch (error) {
+            console.error('Download failed:', error);
+            setError('Failed to download the image. The link might have expired.');
+            setSubmitStatus({
+                open: true,
+                message: 'Download failed - the link might have expired',
+                severity: 'error'
+            });
+        }
+    };
+
 
     // Handle number input changes
     const handleInputChange = (e) => {
@@ -62,12 +113,11 @@ const AppTemplate = () => {
 
         const reader = new FileReader();
         reader.onload = () => {
-            // Remove the data:image/[type];base64, prefix from the base64 string
             const base64String = reader.result.split(',')[1];
             setFormData(prev => ({
                 ...prev,
                 file: file,
-                base64Image: base64String // Store only the base64 data without the prefix
+                base64Image: base64String
             }));
         };
 
@@ -90,7 +140,7 @@ const AppTemplate = () => {
         e.preventDefault();
         setLoading(true);
         setError('');
-        setApiResponse(null);
+        setDownloadUrl(null);
 
         // Validate form data
         if (!formData.height || !formData.width) {
@@ -104,27 +154,26 @@ const AppTemplate = () => {
             setLoading(false);
             return;
         }
-
         try {
             // Prepare data for API
             const payload = {
                 height: parseInt(formData.height),
                 width: parseInt(formData.width),
-                image: formData.base64Image // Send only the base64 data without the prefix
+                image: formData.base64Image
             };
 
             console.log('Sending request to:', API_URL);
             console.log('Payload:', {
                 height: payload.height,
                 width: payload.width,
-                image: 'base64_string_here...' // Log truncated for readability
+                image: 'base64_string_here...'
             });
 
             // Make API call
             const response = await axios.post(API_URL, payload);
 
             console.log('Full API Response:', response);
-            setApiResponse(response.data);
+            setDownloadUrl(response.data.downloadUrl);
 
             // Show success message
             setSubmitStatus({
@@ -144,6 +193,47 @@ const AppTemplate = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Render download section
+    const renderDownloadSection = () => {
+        if (!downloadUrl) return null;
+
+        return (
+            <Paper
+                elevation={3}
+                sx={{
+                    p: 4,
+                    mt: 3,
+                    backgroundColor: 'background.paper',
+                    borderRadius: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2
+                }}
+            >
+                <Typography variant="h6" color="primary">
+                    Your image has been resized!
+                </Typography>
+
+                <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<DownloadIcon />}
+                    onClick={() => handleDownload(downloadUrl)}
+                    sx={{
+                        py: 1.5,
+                        px: 4,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontSize: '1.1rem'
+                    }}
+                >
+                    Download Resized Image
+                </Button>
+            </Paper>
+        );
     };
 
     return (
@@ -290,32 +380,9 @@ const AppTemplate = () => {
                         </Box>
                     </Paper>
 
-                    {/* Response Preview */}
-                    {apiResponse && (
-                        <Paper
-                            elevation={3}
-                            sx={{
-                                p: 4,
-                                mt: 3,
-                                backgroundColor: 'background.paper',
-                                borderRadius: 2,
-                            }}
-                        >
-                            <Typography variant="h6" sx={{ mb: 2 }}>API Response:</Typography>
-                            <pre style={{
-                                overflow: 'auto',
-                                maxHeight: '200px',
-                                backgroundColor: 'rgba(0,0,0,0.1)',
-                                padding: '1rem',
-                                borderRadius: '4px'
-                            }}>
-                                {JSON.stringify(apiResponse, null, 2)}
-                            </pre>
-                        </Paper>
-                    )}
+                    {renderDownloadSection()}
                 </Container>
 
-                {/* Snackbar for submission feedback */}
                 <Snackbar
                     open={submitStatus.open}
                     autoHideDuration={6000}
